@@ -2,32 +2,34 @@
   var cfg = window.LeadBackupConfig || {};
   var SHEET_URL = cfg.googleScriptUrl || "";
 
-  function sendToSheet(payload) {
+  function postToSheet(payload) {
     if (!SHEET_URL) return;
 
-    var body = new URLSearchParams({
+    var formBody = new URLSearchParams({
       payload: JSON.stringify(payload)
-    });
+    }).toString();
 
-    // 1) Best effort on page unload/redirect
-    try {
-      if (navigator.sendBeacon) {
-        var blob = new Blob([body.toString()], {
-          type: "application/x-www-form-urlencoded;charset=UTF-8"
-        });
-        navigator.sendBeacon(SHEET_URL, blob);
-      }
-    } catch (e) {}
+    // Use sendBeacon only if available
+    if (navigator.sendBeacon) {
+      try {
+        navigator.sendBeacon(
+          SHEET_URL,
+          new Blob([formBody], { type: "application/x-www-form-urlencoded;charset=UTF-8" })
+        );
+        return; // IMPORTANT: stop here
+      } catch (e) { }
+    }
 
-    // 2) Regular request fallback
+    // Fallback only when beacon is not used
     fetch(SHEET_URL, {
       method: "POST",
       mode: "no-cors",
       keepalive: true,
       headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-      body: body
-    }).catch(function () {});
+      body: formBody
+    }).catch(function () { });
   }
+
 
   function patch() {
     if (typeof window.SendLead !== "function") {
