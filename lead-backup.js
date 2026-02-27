@@ -1,4 +1,5 @@
 (function () {
+  console.log("Inside the github lead script")
   var cfg = window.LeadBackupConfig || {};
   var CRM_BASE = (cfg.crmBaseUrl || "https://api.homesfy.in/").replace(/\/+$/, "") + "/";
   var SHEET_URL = cfg.googleScriptUrl || "";
